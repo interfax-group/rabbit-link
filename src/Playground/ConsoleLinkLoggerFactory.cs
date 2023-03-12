@@ -1,4 +1,4 @@
-﻿#region Usings
+#region Usings
 
 using RabbitLink.Logging;
 
@@ -8,9 +8,10 @@ namespace Playground
 {
     internal class ConsoleLinkLoggerFactory : ILinkLoggerFactory
     {
-        public ILinkLogger CreateLogger(string name)
+        /// <inheritdoc />
+        public ILinkLogger CreateLogger(string name, string identifier)
         {
-            return new ConsoleLinkLogger(name);
+            return new ConsoleLinkLogger($"{name}({identifier})");
         }
     }
 }

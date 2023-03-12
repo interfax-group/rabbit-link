@@ -1,4 +1,4 @@
-﻿#region Usings
+#region Usings
 
 using System;
 using System.Runtime.CompilerServices;
@@ -39,7 +39,7 @@ namespace RabbitLink.Topology.Internal
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _configuration = configuration;
 
-            _logger = _channel.Connection.Configuration.LoggerFactory.CreateLogger($"{GetType().Name}({Id:D})")
+            _logger = _channel.Connection.Configuration.LoggerFactory.CreateLogger(GetType().Name, Id.ToString("D"))
                       ?? throw new InvalidOperationException("Cannot create logger");
 
             _topologyRunner = new LinkTopologyRunner<object>(_logger, async cfg =>

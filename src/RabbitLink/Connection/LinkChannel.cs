@@ -44,7 +44,7 @@ namespace RabbitLink.Connection
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _logger =
-                connection.Configuration.LoggerFactory.CreateLogger($"{GetType().Name}({Id:D})")
+                connection.Configuration.LoggerFactory.CreateLogger(GetType().Name, Id.ToString("D"))
                 ?? throw new ArgumentException("Cannot create logger", nameof(connection.Configuration.LoggerFactory));
 
             if (recoveryInterval <= TimeSpan.Zero)

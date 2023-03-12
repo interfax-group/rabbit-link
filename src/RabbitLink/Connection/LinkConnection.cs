@@ -48,7 +48,7 @@ namespace RabbitLink.Connection
         {
             _configuration = configuration;
 
-            _logger = _configuration.LoggerFactory.CreateLogger($"{GetType().Name}({Id:D})")
+            _logger = _configuration.LoggerFactory.CreateLogger(GetType().Name, Id.ToString("D"))
                       ?? throw new ArgumentException("Cannot create logger", nameof(configuration.LoggerFactory));
 
             _connectionFactory = new LinkConnectionFactory(

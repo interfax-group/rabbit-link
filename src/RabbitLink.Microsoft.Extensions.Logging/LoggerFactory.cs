@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace RabbitLink.Logging
 {
@@ -13,7 +13,22 @@ namespace RabbitLink.Logging
             _categoryPrefix = categoryPrefix;
         }
 
-        public ILinkLogger CreateLogger(string name) => new Logger(_factory.CreateLogger($"{_categoryPrefix}{name}"));
+        public ILinkLogger CreateLogger(string name, string identifier)
+            => new Logger(_factory.CreateLogger($"{_categoryPrefix}{name}{identifier}"));
+    }
 
+    internal class IdentityIgnoringLoggerFactory : ILinkLoggerFactory
+    {
+        private readonly ILoggerFactory _factory;
+        private readonly string _categoryPrefix;
+
+        public IdentityIgnoringLoggerFactory(ILoggerFactory factory, string categoryPrefix)
+        {
+            _factory = factory;
+            _categoryPrefix = categoryPrefix;
+        }
+
+        public ILinkLogger CreateLogger(string name, string _)
+            => new Logger(_factory.CreateLogger($"{_categoryPrefix}{name}"));
     }
 }

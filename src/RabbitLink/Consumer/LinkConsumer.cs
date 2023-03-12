@@ -51,7 +51,7 @@ namespace RabbitLink.Consumer
 
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
 
-            _logger = _channel.Connection.Configuration.LoggerFactory.CreateLogger($"{GetType().Name}({Id:D})")
+            _logger = _channel.Connection.Configuration.LoggerFactory. CreateLogger(GetType().Name, Id.ToString("D"))
                       ?? throw new InvalidOperationException("Cannot create logger");
 
             _topologyRunner = new LinkTopologyRunner<ILinkQueue>(_logger, configuration.TopologyHandler.Configure);
