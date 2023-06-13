@@ -17,6 +17,7 @@ using RabbitLink.Topology;
 using RabbitLink.Topology.Internal;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace RabbitLink.Consumer
 {
@@ -231,6 +232,11 @@ namespace RabbitLink.Consumer
                 _queue = await _topologyRunner
                                .RunAsync(model, cancellation)
                                .ConfigureAwait(false);
+            }
+            catch (AlreadyClosedException)
+            {
+                _logger.Warning("Connection was marked as already closed for consumer, connection should be restarted.");
+                throw;
             }
             catch (Exception ex)
             {
@@ -570,7 +576,6 @@ namespace RabbitLink.Consumer
             /// </summary>
             public DeliveryInvocation()
             {
-
             }
 
             /// <summary>
