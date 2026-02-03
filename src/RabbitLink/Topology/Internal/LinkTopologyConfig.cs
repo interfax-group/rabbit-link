@@ -4,9 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RabbitLink.Internals;
 using RabbitLink.Internals.Actions;
-using RabbitLink.Internals.Queues;
 using RabbitLink.Logging;
 using RabbitMQ.Client;
 
@@ -271,6 +269,7 @@ namespace RabbitLink.Topology.Internal
             return new LinkQueue(queue.QueueName, false);
         }
 
+        /// <inheritdoc />
         public async Task<ILinkQueue> QueueDeclare(
             string name,
             bool durable = true,
@@ -285,7 +284,10 @@ namespace RabbitLink.Topology.Internal
             string deadLetterRoutingKey = null
         )
         {
-            var arguments = new Dictionary<string, object>();
+            var arguments = new Dictionary<string, object>
+                            {
+                                { "x-queue-type", "classic" }
+                            };
 
             if (messageTtl != null)
             {
@@ -341,7 +343,88 @@ namespace RabbitLink.Topology.Internal
                 .ConfigureAwait(false);
 
             _logger.Debug(
-                $"Declared queue \"{queue.QueueName}\", durable: {durable}, exclusive: {exclusive}, autoDelete: {autoDelete}, arguments: {string.Join(", ", arguments.Select(x => $"{x.Key} = {x.Value}"))}");
+                $"Declared classic queue \"{queue.QueueName}\", durable: {durable}, exclusive: {exclusive}, autoDelete: {autoDelete}, arguments: {string.Join(", ", arguments.Select(x => $"{x.Key} = {x.Value}"))}");
+
+            return new LinkQueue(queue.QueueName, exclusive);
+        }
+
+        /// <inheritdoc />
+        public async Task<ILinkQueue> QueueDeclareQuorum(
+            string name,
+            bool exclusive = false,
+            bool autoDelete = false,
+            TimeSpan? messageTtl = null,
+            TimeSpan? expires = null,
+            int? maxLength = null,
+            int? maxLengthBytes = null,
+            string deadLetterExchange = null,
+            string deadLetterRoutingKey = null
+        )
+        {
+            var arguments = new Dictionary<string, object>
+                            {
+                                { "x-queue-type", "quorum" }
+                            };
+
+            if (messageTtl != null)
+            {
+                if (messageTtl.Value.TotalMilliseconds < 0 || messageTtl.Value.TotalMilliseconds > long.MaxValue)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(messageTtl),
+                        "Must be greater or equal 0 and less than Int64.MaxValue"
+                    );
+                }
+
+                arguments.Add("x-message-ttl", (long)messageTtl.Value.TotalMilliseconds);
+            }
+
+            if (expires != null)
+            {
+                if (expires.Value.TotalMilliseconds <= 0 || expires.Value.TotalMilliseconds > int.MaxValue)
+                    throw new ArgumentOutOfRangeException(nameof(expires),
+                        "Total milliseconds must be greater than 0 and less than Int32.MaxValue");
+
+                arguments.Add("x-expires", (int)expires.Value.TotalMilliseconds);
+            }
+
+            if (maxLength != null)
+            {
+                if (maxLength <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(maxLength), "Must be greater than 0");
+                }
+
+                arguments.Add("x-max-length", maxLength.Value);
+            }
+
+            if (maxLengthBytes != null)
+            {
+                if (maxLengthBytes <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(maxLengthBytes), "Must be greater than 0");
+                }
+
+                arguments.Add("x-max-length-bytes", maxLengthBytes.Value);
+            }
+
+            if (deadLetterExchange != null)
+            {
+                arguments.Add("x-dead-letter-exchange", deadLetterExchange);
+            }
+
+            if (deadLetterRoutingKey != null)
+            {
+                arguments.Add("x-dead-letter-routing-key", deadLetterRoutingKey);
+            }
+
+            var queue = await _invoker
+                .InvokeAsync(model => model.QueueDeclare(name, durable: true, exclusive, autoDelete, arguments))
+                .ConfigureAwait(false);
+
+            _logger.Debug(
+                $"Declared quorum queue \"{queue.QueueName}\", durable: true, exclusive: {exclusive}, autoDelete: {autoDelete}, arguments: {string.Join(", ", arguments.Select(x => $"{x.Key} = {x.Value}"))}"
+            );
 
             return new LinkQueue(queue.QueueName, exclusive);
         }
