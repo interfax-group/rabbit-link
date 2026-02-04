@@ -284,10 +284,7 @@ namespace RabbitLink.Topology.Internal
             string deadLetterRoutingKey = null
         )
         {
-            var arguments = new Dictionary<string, object>
-                            {
-                                { "x-queue-type", "classic" }
-                            };
+            var arguments = new Dictionary<string, object>();
 
             if (messageTtl != null)
             {
